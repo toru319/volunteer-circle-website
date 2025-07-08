@@ -56,6 +56,70 @@ async function postData(sheetName, action, data = {}, id = null) {
     }
 }
 
+// script.js のどこか（DOMContentLoaded の外側が良いでしょう）
+
+// ログイン状態に応じてナビゲーションやウェルカムメッセージを更新する関数
+function updateNavigationAndWelcomeMessage() {
+    const loggedInUser = JSON.parse(localStorage.getItem('loggedInUser'));
+    const loginLink = document.querySelector('a[data-page="login"]');
+    const myPageLink = document.querySelector('a[data-page="my-page"]');
+    const welcomeMessage = document.querySelector('#my-page .welcome-message');
+    const hamburgerNavLinks = document.querySelector('.nav-links'); // ハンバーガーメニュー内のナビゲーション
+
+    if (loggedInUser) {
+        // ログイン状態の場合
+        if (loginLink) loginLink.textContent = 'ログアウト';
+        if (loginLink) loginLink.setAttribute('data-page', 'logout'); // ログアウトアクションに変更
+
+        if (myPageLink) myPageLink.style.display = 'block'; // マイページを表示
+        if (welcomeMessage) welcomeMessage.textContent = `ようこそ、${loggedInUser.name}さん`;
+
+        // ログアウト処理のイベントリスナーを動的に追加
+        const logoutLink = document.querySelector('a[data-page="logout"]');
+        if (logoutLink) {
+            logoutLink.removeEventListener('click', handleLogout); // 多重登録防止
+            logoutLink.addEventListener('click', handleLogout);
+        }
+
+    } else {
+        // 未ログイン状態の場合
+        if (loginLink) loginLink.textContent = 'ログイン';
+        if (loginLink) loginLink.setAttribute('data-page', 'login');
+        if (myPageLink) myPageLink.style.display = 'none'; // マイページを非表示
+        if (welcomeMessage) welcomeMessage.textContent = 'ようこそ、ゲストさん';
+    }
+
+    // ハンバーガーメニュー内の表示も更新
+    if (hamburgerNavLinks) {
+        const mobileLoginLink = hamburgerNavLinks.querySelector('a[data-page="login"]');
+        const mobileMyPageLink = hamburgerNavLinks.querySelector('a[data-page="my-page"]');
+        if (loggedInUser) {
+            if (mobileLoginLink) mobileLoginLink.textContent = 'ログアウト';
+            if (mobileLoginLink) mobileLoginLink.setAttribute('data-page', 'logout');
+            if (mobileMyPageLink) mobileMyPageLink.style.display = 'block';
+        } else {
+            if (mobileLoginLink) mobileLoginLink.textContent = 'ログイン';
+            if (mobileLoginLink) mobileLoginLink.setAttribute('data-page', 'login');
+            if (mobileMyPageLink) mobileMyPageLink.style.display = 'none';
+        }
+    }
+}
+
+// ログアウト処理
+function handleLogout(e) {
+    e.preventDefault();
+    if (confirm('ログアウトしますか？')) {
+        localStorage.removeItem('loggedInUser'); // localStorageからユーザー情報を削除
+        alert('ログアウトしました。');
+        updateNavigationAndWelcomeMessage(); // ナビゲーションを更新
+        showPage('home'); // ホームページに戻る
+    }
+}
+
+
+// document.addEventListener('DOMContentLoaded', () => の中、初期ページ表示の後に呼び出す
+    showPage('home'); // 初期ページ表示
+    updateNavigationAndWelcomeMessage(); // ログイン状態をチェックし、UIを更新
 
 document.addEventListener('DOMContentLoaded', () => {
 
