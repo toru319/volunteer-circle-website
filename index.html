@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Volunteer Hub</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <header>
+        <div class="container">
+            <a href="#" class="logo" data-page="home">Volunteer Hub</a>
+            <nav>
+                <ul class="nav-links">
+                    <li><a href="#" data-page="home">ホーム</a></li>
+                    <li><a href="#" data-page="activity-list">活動一覧</a></li>
+                    <li><a href="#" data-page="login">ログイン</a></li>
+                    <li><a href="#" data-page="my-page">マイページ</a></li>
+                </ul>
+            </nav>
+            <button class="hamburger" id="hamburger-menu" aria-label="メニューを開く">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+    </header>
+
+    <main>
+        <!-- ホームページ -->
+        <section id="home" class="page active">
+            <div class="hero">
+                <div class="container">
+                    <h1>未来を変える、一歩を踏み出そう</h1>
+                    <p>あなたの力が、地域と社会を支えます。</p>
+                    <a href="#" class="btn btn-primary" data-page="activity-list">活動を探す</a>
+                </div>
+            </div>
+
+            <div class="container">
+                <!-- 新着活動セクション -->
+                <section id="new-activities" class="content-section">
+                    <h2>新着活動</h2>
+                    <div class="card-container">
+                        <!-- Card 1 -->
+                        <div class="card">
+                            <h3>海岸クリーンアップ</h3>
+                            <p>日時: 2025年7月26日(土) 9:00-12:00</p>
+                            <p>場所: 横浜市中区 海岸公園</p>
+                            <a href="#" class="card-link" data-page="activity-detail" data-activity-id="1">詳細を見る</a>
+                        </div>
+                        <!-- Card 2 -->
+                        <div class="card">
+                            <h3>子ども食堂の配膳サポート</h3>
+                            <p>日時: 2025年7月27日(日) 16:00-19:00</p>
+                            <p>場所: 横浜市西区 中央公民館</p>
+                            <a href="#" class="card-link" data-page="activity-detail" data-activity-id="2">詳細を見る</a>
+                        </div>
+                        <!-- Card 3 -->
+                        <div class="card">
+                            <h3>地域の夏祭り運営補助</h3>
+                            <p>日時: 2025年8月2日(土) 10:00-17:00</p>
+                            <p>場所: 横浜市港北区 商店街</p>
+                            <a href="#" class="card-link" data-page="activity-detail" data-activity-id="3">詳細を見る</a>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- お知らせセクション -->
+                <section id="announcements" class="content-section">
+                    <h2>お知らせ</h2>
+                    <ul>
+                        <li>2025/07/01: 新規ウェブサイトをオープンしました。</li>
+                        <li>2025/06/20: 夏休みのボランティア特集ページを公開しました。</li>
+                        <li>2025/06/15: 登録団体向けの説明会を実施しました。</li>
+                    </ul>
+                </section>
+            </div>
+        </section>
+
+        <!-- 活動一覧ページ -->
+        <section id="activity-list" class="page">
+            <div class="container">
+                <h2>活動一覧</h2>
+                <!-- フィルタリング・ソート機能 -->
+                <div class="filters">
+                    <input type="text" placeholder="キーワード検索..." class="filter-keyword">
+                    <select class="filter-category">
+                        <option value="">すべてのカテゴリ</option>
+                        <option value="environment">環境</option>
+                        <option value="children">子ども</option>
+                        <option value="community">地域</option>
+                        <option value="international">国際</option>
+                    </select>
+                    <input type="date" class="filter-date">
+                    <button class="btn btn-secondary">検索</button>
+                </div>
+
+                <!-- 活動カードのリスト表示 -->
+                <div class="card-container">
+                     <div class="card">
+                        <h3>海岸クリーンアップ</h3>
+                        <p><strong>日時:</strong> 2025年7月26日(土) 9:00-12:00</p>
+                        <p><strong>場所:</strong> 横浜市中区 海岸公園</p>
+                        <p><strong>募集状況:</strong> <span class="status-open">募集中</span></p>
+                        <p>概要: 美しい海岸を未来に残すため、一緒に清掃活動をしませんか？</p>
+                        <a href="#" class="card-link" data-page="activity-detail" data-activity-id="1">詳細を見る</a>
+                    </div>
+                     <div class="card">
+                        <h3>子ども食堂の配膳サポート</h3>
+                        <p><strong>日時:</strong> 2025年7月27日(日) 16:00-19:00</p>
+                        <p><strong>場所:</strong> 横浜市西区 中央公民館</p>
+                        <p><strong>募集状況:</strong> <span class="status-full">満員</span></p>
+                        <p>概要: 地域の子どもたちに温かい食事を届けるお手伝いです。</p>
+                        <a href="#" class="card-link" data-page="activity-detail" data-activity-id="2">詳細を見る</a>
+                    </div>
+                    <div class="card">
+                        <h3>地域の夏祭り運営補助</h3>
+                        <p><strong>日時:</strong> 2025年8月2日(土) 10:00-17:00</p>
+                        <p><strong>場所:</strong> 横浜市港北区 商店街</p>
+                        <p><strong>募集状況:</strong> <span class="status-open">募集中</span></p>
+                        <p>概要: 模擬店の運営や会場の案内など、祭りを盛り上げる仕事です。</p>
+                        <a href="#" class="card-link" data-page="activity-detail" data-activity-id="3">詳細を見る</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 活動詳細ページ -->
+        <section id="activity-detail" class="page">
+            <div class="container">
+                <!-- 活動詳細コンテンツ -->
+                <h2>海岸クリーンアップ</h2>
+                <p><strong>日時:</strong> 2025年7月26日(土) 9:00-12:00</p>
+                <p><strong>場所:</strong> 横浜市中区 海岸公園</p>
+                <p><strong>詳細説明:</strong> 近年、海洋プラスチックごみが問題となっています。私たちの手で美しい横浜の海を守り、未来の子どもたちに残していくための活動です。軍手やゴミ袋はこちらで用意しますので、動きやすい服装でご参加ください。小雨決行、荒天中止です。</p>
+                
+                <h3>現在の参加者 (3/15名)</h3>
+                <ul class="participant-list">
+                    <li>山田 太郎 (大学3年)</li>
+                    <li>鈴木 花子 (大学2年)</li>
+                    <li>佐藤 次郎 (大学4年)</li>
+                </ul>
+
+                <button class="btn btn-primary">参加登録する</button>
+            </div>
+        </section>
+
+        <!-- ログインページ -->
+        <section id="login" class="page">
+            <div class="container form-container">
+                <h2>ログイン</h2>
+                <!-- ログインフォーム -->
+                <form>
+                    <div class="form-group">
+                        <label for="login-email">メールアドレス</label>
+                        <input type="email" id="login-email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="login-password">パスワード</label>
+                        <input type="password" id="login-password" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">ログイン</button>
+                </form>
+                <div class="form-links">
+                    <a href="#" data-page="signup">新規登録はこちら</a>
+                    <a href="#">パスワードを忘れたら</a>
+                </div>
+            </div>
+        </section>
+
+        <!-- 新規登録ページ -->
+        <section id="signup" class="page">
+            <div class="container form-container">
+                <h2>新規登録</h2>
+                <!-- 新規登録フォーム -->
+                <form>
+                    <div class="form-group">
+                        <label for="signup-name">氏名</label>
+                        <input type="text" id="signup-name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="signup-grade">学年</label>
+                        <input type="text" id="signup-grade" placeholder="例: 大学3年" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="signup-email">メールアドレス</label>
+                        <input type="email" id="signup-email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="signup-password">パスワード</label>
+                        <input type="password" id="signup-password" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">登録する</button>
+                </form>
+            </div>
+        </section>
+
+        <!-- マイページ -->
+        <section id="my-page" class="page">
+            <div class="container">
+                <h2>マイページ</h2>
+                <p class="welcome-message">ようこそ、山田 太郎さん</p>
+
+                <!-- 登録済み活動リスト -->
+                <div class="my-activities">
+                    <h3>登録済みの活動</h3>
+                    <div class="card">
+                        <h4>海岸クリーンアップ</h4>
+                        <p><strong>日時:</strong> 2025年7月26日(土) 9:00-12:00</p>
+                        <p><strong>参加状況:</strong> <span class="status-confirmed">参加確定</span></p>
+                        <div class="my-activity-actions">
+                            <button class="btn btn-secondary">修正</button>
+                            <button class="btn btn-danger">キャンセル</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 過去の参加履歴 -->
+                <div class="past-activities">
+                    <h3>過去の参加履歴</h3>
+                     <div class="card card-past">
+                        <h4>公園の植樹活動</h4>
+                        <p><strong>日時:</strong> 2025年4月12日(土)</p>
+                        <p>無事終了しました</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 Volunteer Hub. All Rights Reserved.</p>
+            <a href="#">プライバシーポリシー</a>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
