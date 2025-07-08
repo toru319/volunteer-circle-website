@@ -28,7 +28,6 @@
     </header>
 
     <main>
-        <!-- ホームページ -->
         <section id="home" class="page active">
             <div class="hero">
                 <div class="container">
@@ -39,25 +38,21 @@
             </div>
 
             <div class="container">
-                <!-- 新着活動セクション -->
                 <section id="new-activities" class="content-section">
                     <h2>新着活動</h2>
                     <div class="card-container">
-                        <!-- Card 1 -->
                         <div class="card">
                             <h3>海岸クリーンアップ</h3>
                             <p>日時: 2025年7月26日(土) 9:00-12:00</p>
                             <p>場所: 横浜市中区 海岸公園</p>
                             <a href="#" class="card-link" data-page="activity-detail" data-activity-id="1">詳細を見る</a>
                         </div>
-                        <!-- Card 2 -->
                         <div class="card">
                             <h3>子ども食堂の配膳サポート</h3>
                             <p>日時: 2025年7月27日(日) 16:00-19:00</p>
                             <p>場所: 横浜市西区 中央公民館</p>
                             <a href="#" class="card-link" data-page="activity-detail" data-activity-id="2">詳細を見る</a>
                         </div>
-                        <!-- Card 3 -->
                         <div class="card">
                             <h3>地域の夏祭り運営補助</h3>
                             <p>日時: 2025年8月2日(土) 10:00-17:00</p>
@@ -67,7 +62,6 @@
                     </div>
                 </section>
 
-                <!-- お知らせセクション -->
                 <section id="announcements" class="content-section">
                     <h2>お知らせ</h2>
                     <ul>
@@ -79,11 +73,9 @@
             </div>
         </section>
 
-        <!-- 活動一覧ページ -->
         <section id="activity-list" class="page">
             <div class="container">
                 <h2>活動一覧</h2>
-                <!-- フィルタリング・ソート機能 -->
                 <div class="filters">
                     <input type="text" placeholder="キーワード検索..." class="filter-keyword">
                     <select class="filter-category">
@@ -97,7 +89,6 @@
                     <button class="btn btn-secondary">検索</button>
                 </div>
 
-                <!-- 活動カードのリスト表示 -->
                 <div class="card-container">
                      <div class="card">
                         <h3>海岸クリーンアップ</h3>
@@ -127,10 +118,8 @@
             </div>
         </section>
 
-        <!-- 活動詳細ページ -->
         <section id="activity-detail" class="page">
             <div class="container">
-                <!-- 活動詳細コンテンツ -->
                 <h2>海岸クリーンアップ</h2>
                 <p><strong>日時:</strong> 2025年7月26日(土) 9:00-12:00</p>
                 <p><strong>場所:</strong> 横浜市中区 海岸公園</p>
@@ -147,16 +136,12 @@
             </div>
         </section>
 
-        <!-- ログインページ -->
         <section id="login" class="page">
             <div class="container form-container">
                 <h2>ログイン</h2>
-                <!-- ログインフォーム -->
                 <form>
                     <div class="form-group">
-                        <label for="login-email">メールアドレス</label>
-                        <input type="email" id="login-email" required>
-                    </div>
+                        <label for="login-id">ID</label> <input type="text" id="login-id" required> </div>
                     <div class="form-group">
                         <label for="login-password">パスワード</label>
                         <input type="password" id="login-password" required>
@@ -164,46 +149,16 @@
                     <button type="submit" class="btn btn-primary">ログイン</button>
                 </form>
                 <div class="form-links">
-                    <a href="#" data-page="signup">新規登録はこちら</a>
                     <a href="#">パスワードを忘れたら</a>
                 </div>
             </div>
         </section>
 
-        <!-- 新規登録ページ -->
-        <section id="signup" class="page">
-            <div class="container form-container">
-                <h2>新規登録</h2>
-                <!-- 新規登録フォーム -->
-                <form>
-                    <div class="form-group">
-                        <label for="signup-name">氏名</label>
-                        <input type="text" id="signup-name" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="signup-grade">学年</label>
-                        <input type="text" id="signup-grade" placeholder="例: 大学3年" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="signup-email">メールアドレス</label>
-                        <input type="email" id="signup-email" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="signup-password">パスワード</label>
-                        <input type="password" id="signup-password" required>
-                    </div>
-                    <button type="submit" class="btn btn-primary">登録する</button>
-                </form>
-            </div>
-        </section>
-
-        <!-- マイページ -->
         <section id="my-page" class="page">
             <div class="container">
                 <h2>マイページ</h2>
                 <p class="welcome-message">ようこそ、山田 太郎さん</p>
 
-                <!-- 登録済み活動リスト -->
                 <div class="my-activities">
                     <h3>登録済みの活動</h3>
                     <div class="card">
@@ -217,7 +172,6 @@
                     </div>
                 </div>
 
-                <!-- 過去の参加履歴 -->
                 <div class="past-activities">
                     <h3>過去の参加履歴</h3>
                      <div class="card card-past">

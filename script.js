@@ -183,7 +183,7 @@ async function loadActivityDetail(activityID) {
     const detailPage = document.getElementById('activity-detail');
     const detailContainer = detailPage.querySelector('.container');
     detailContainer.innerHTML = '活動詳細を読み込み中...';
-    showPage('activity-detail');
+    showPage('activity-detail'); 
 
     const activity = await fetchData('Activities', 'getById', { id: activityID });
     if (!activity) {
@@ -390,11 +390,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const pages = document.querySelectorAll('.page');
     const navLinks = document.querySelectorAll('a[data-page]');
 
-    // ★修正箇所: hamburgerとmobileNavの宣言をここへ移動★
+    // hamburgerとmobileNavの宣言をここへ移動
     const hamburger = document.getElementById('hamburger-menu');
     const mobileNav = document.querySelector('.nav-links');
-    // ★ここまで移動★
 
+    // showPage関数はDOMContentLoadedスコープの直下に定義されているため、他の関数からアクセス可能
     function showPage(pageId) {
         pages.forEach(page => {
             page.classList.remove('active');
@@ -403,7 +403,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (targetPage) {
             targetPage.classList.add('active');
         } else {
-            // デフォルトでホームページを表示
             document.getElementById('home').classList.add('active');
         }
         window.scrollTo(0, 0);
@@ -459,42 +458,42 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- 各ページのDOM操作やイベントハンドリング ---
 
-    // --- 新規登録ページ ---
-    const signupForm = document.querySelector('#signup form');
-    if(signupForm) {
-        signupForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
+    // ★新規登録ページは削除または非表示にするため、関連コードをコメントアウトまたは削除
+    // const signupForm = document.querySelector('#signup form');
+    // if(signupForm) {
+    //     signupForm.addEventListener('submit', async (e) => {
+    //         e.preventDefault();
 
-            const name = document.getElementById('signup-name').value;
-            const grade = document.getElementById('signup-grade').value;
-            const email = document.getElementById('signup-email').value;
-            const password = document.getElementById('signup-password').value;
+    //         const name = document.getElementById('signup-name').value;
+    //         const grade = document.getElementById('signup-grade').value;
+    //         const email = document.getElementById('signup-email').value;
+    //         const password = document.getElementById('signup-password').value;
 
-            if (!name || !grade || !email || !password) {
-                alert('すべての項目を入力してください。');
-                return;
-            }
+    //         if (!name || !grade || !email || !password) {
+    //             alert('すべての項目を入力してください。');
+    //             return;
+    //         }
 
-            const userData = {
-                name: name,
-                grade: grade,
-                email: email,
-                password: password,
-                role: 'user',
-                createdAt: new Date().toISOString()
-            };
+    //         const userData = {
+    //             name: name,
+    //             grade: grade,
+    //             email: email,
+    //             password: password,
+    //             role: 'user',
+    //             createdAt: new Date().toISOString()
+    //         };
 
-            const result = await postData('Users', 'addUser', userData);
+    //         const result = await postData('Users', 'addUser', userData);
             
-            if (result && result.success) {
-                alert('新規登録が完了しました！ログインしてください。');
-                signupForm.reset();
-                showPage('login');
-            } else {
-                alert('登録に失敗しました: ' + (result ? result.message || result.error : '不明なエラー'));
-            }
-        });
-    }
+    //         if (result && result.success) {
+    //             alert('新規登録が完了しました！ログインしてください。');
+    //             signupForm.reset();
+    //             showPage('login');
+    //         } else {
+    //             alert('登録に失敗しました: ' + (result ? result.message || result.error : '不明なエラー'));
+    //         }
+    //     });
+    // }
 
     // --- ログインページ ---
     const loginForm = document.querySelector('#login form');
@@ -502,16 +501,16 @@ document.addEventListener('DOMContentLoaded', () => {
         loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             
-            const email = document.getElementById('login-email').value;
-            const password = document.getElementById('login-password').value;
+            const loginID = document.getElementById('login-id').value; // ★メールアドレスの代わりにIDを取得★
+            const password = document.getElementById('login-password').value; // 生パスワードをそのまま送る
 
-            if (!email || !password) {
-                alert('メールアドレスとパスワードを入力してください。');
+            if (!loginID || !password) {
+                alert('IDとパスワードを入力してください。');
                 return;
             }
 
             const loginData = {
-                email: email,
+                loginID: loginID, // ★loginIDを送る★
                 password: password
             };
 
