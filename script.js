@@ -147,18 +147,42 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
 
-    // --- 新規登録ページ ---
-    // TODO: 新規登録フォームの送信処理
-    const signupForm = document.querySelector('#signup form');
-    if(signupForm) {
-        signupForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            console.log('Signup form submitted');
-            // ここに新規ユーザー登録のロジックを記述
-            // 成功したらログインページへ
-            showPage('login');
-        });
-    }
+// --- 新規登録ページ ---
+const signupForm = document.querySelector('#signup form');
+if(signupForm) {
+    signupForm.addEventListener('submit', async (e) => { // asyncを追加
+        e.preventDefault();
+
+        const name = document.getElementById('signup-name').value;
+        const grade = document.getElementById('signup-grade').value;
+        const email = document.getElementById('signup-email').value;
+        const password = document.getElementById('signup-password').value;
+
+        if (!name || !grade || !email || !password) {
+            alert('すべての項目を入力してください。');
+            return;
+        }
+
+        const userData = {
+            name: name,
+            grade: grade,
+            email: email,
+            password: password, // GAS側でハッシュ化される
+            role: 'user', // デフォルトは一般ユーザー
+            createdAt: new Date().toISOString()
+        };
+
+        const result = await postData('Users', 'addUser', userData); // 'addUser' アクションを新しく定義
+
+        if (result && result.success) {
+            alert('新規登録が完了しました！ログインしてください。');
+            signupForm.reset(); // フォームをクリア
+            showPage('login'); // 成功したらログインページへ
+        } else {
+            alert('登録に失敗しました: ' + (result ? result.message || result.error : '不明なエラー'));
+        }
+    });
+}
 
 
     // --- マイページ ---
