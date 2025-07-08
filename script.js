@@ -133,18 +133,40 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
 
-    // --- ログインページ ---
-    // TODO: ログインフォームの送信処理
-    const loginForm = document.querySelector('#login form');
-    if(loginForm) {
-        loginForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            console.log('Login form submitted');
-            // ここにログイン認証のロジックを記述
-            // 成功したらマイページへ
-            showPage('my-page');
-        });
-    }
+// TODO: ログインフォームの送信処理
+// --- ログインページ ---
+const loginForm = document.querySelector('#login form');
+if(loginForm) {
+    loginForm.addEventListener('submit', async (e) => { // asyncを追加
+        e.preventDefault();
+        
+        const email = document.getElementById('login-email').value;
+        const password = document.getElementById('login-password').value;
+
+        if (!email || !password) {
+            alert('メールアドレスとパスワードを入力してください。');
+            return;
+        }
+
+        const loginData = {
+            email: email,
+            password: password
+        };
+
+        const result = await postData('Users', 'login', loginData); // 'login' アクションを定義
+
+        if (result && result.success) {
+            alert('ログイン成功！');
+            // ログイン成功後、ユーザー情報をlocalStorageに保存してセッションを管理
+            localStorage.setItem('loggedInUser', JSON.stringify(result.user));
+            loginForm.reset(); // フォームをクリア
+            updateNavigationAndWelcomeMessage(); // ナビゲーションやウェルカムメッセージを更新する関数を呼び出す
+            showPage('my-page'); // 成功したらマイページへ
+        } else {
+            alert('ログインに失敗しました: ' + (result ? result.message || result.error : '不明なエラー'));
+        }
+    });
+}
 
 
 // --- 新規登録ページ ---
