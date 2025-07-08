@@ -1,3 +1,62 @@
+const GAS_API_URL = 'https://script.google.com/macros/s/AKfycbxD2PIACuhmL6jMOsFyZewUHBKMHjUJ2xyf900yJvZSayn1veK76JCMu0s9I3WWP9rSVg/exec'; 
+
+// GAS APIと通信するためのヘルパー関数（GETリクエスト）
+async function fetchData(sheetName, action, params = {}) {
+    const urlParams = new URLSearchParams(params);
+    urlParams.append('sheet', sheetName);
+    urlParams.append('action', action);
+    const url = `${GAS_API_URL}?${urlParams.toString()}`;
+
+    try {
+        const response = await fetch(url);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        if (data && data.error) { // GASからのエラーレスポンスを検出
+            throw new Error(data.error);
+        }
+        return data;
+    } catch (error) {
+        console.error('Fetch error:', error);
+        alert('データの取得中にエラーが発生しました: ' + error.message);
+        return null;
+    }
+}
+
+// GAS APIと通信するためのヘルパー関数（POSTリクエスト）
+async function postData(sheetName, action, data = {}, id = null) {
+    const payload = {
+        sheet: sheetName,
+        action: action,
+        data: data,
+        id: id // 更新・削除時に使用
+    };
+
+    try {
+        const response = await fetch(GAS_API_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        });
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const result = await response.json();
+        if (result && result.error) { // GASからのエラーレスポンスを検出
+            throw new Error(result.error);
+        }
+        return result;
+    } catch (error) {
+        console.error('Post error:', error);
+        alert('操作中にエラーが発生しました: ' + error.message);
+        return null;
+    }
+}
+
+
 document.addEventListener('DOMContentLoaded', () => {
 
     // --- SPAページ切り替えの基本ロジック ---
