@@ -390,6 +390,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const pages = document.querySelectorAll('.page');
     const navLinks = document.querySelectorAll('a[data-page]');
 
+    // ★修正箇所: hamburgerとmobileNavの宣言をここへ移動★
+    const hamburger = document.getElementById('hamburger-menu');
+    const mobileNav = document.querySelector('.nav-links');
+    // ★ここまで移動★
+
     function showPage(pageId) {
         pages.forEach(page => {
             page.classList.remove('active');
@@ -398,13 +403,13 @@ document.addEventListener('DOMContentLoaded', () => {
         if (targetPage) {
             targetPage.classList.add('active');
         } else {
+            // デフォルトでホームページを表示
             document.getElementById('home').classList.add('active');
         }
         window.scrollTo(0, 0);
-        closeMobileMenu();
+        closeMobileMenu(); 
     }
 
-    // ナビゲーションリンクのイベントリスナーを修正
     navLinks.forEach(link => {
         link.addEventListener('click', (e) => {
             e.preventDefault();
@@ -425,7 +430,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 showPage(pageId);
                 loadMyActivities();
             } else if (pageId === 'login' && localStorage.getItem('loggedInUser')) {
-                // 既にログイン済みでログインリンクを押された場合（ログアウトリンクとして機能）
                 handleLogout(e);
             }
             else {
@@ -439,25 +443,93 @@ document.addEventListener('DOMContentLoaded', () => {
     updateNavigationAndWelcomeMessage();
     loadActivities('home', 3);
     loadActivities('activity-list');
-    loadMyActivities(); // ログインしていればマイページも初期ロード
+    loadMyActivities();
 
 
     // --- ハンバーガーメニュー ---
-    const hamburger = document.getElementById('hamburger-menu');
-    const mobileNav = document.querySelector('.nav-links');
-
     hamburger.addEventListener('click', () => {
         mobileNav.classList.toggle('active');
     });
     
     function closeMobileMenu() {
-        mobileNav.classList.remove('active');
+        if (mobileNav) { // mobileNavが存在するか確認するガードを追加
+            mobileNav.classList.remove('active');
+        }
     }
 
     // --- 各ページのDOM操作やイベントハンドリング ---
 
+    // --- 新規登録ページ ---
+    const signupForm = document.querySelector('#signup form');
+    if(signupForm) {
+        signupForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const name = document.getElementById('signup-name').value;
+            const grade = document.getElementById('signup-grade').value;
+            const email = document.getElementById('signup-email').value;
+            const password = document.getElementById('signup-password').value;
+
+            if (!name || !grade || !email || !password) {
+                alert('すべての項目を入力してください。');
+                return;
+            }
+
+            const userData = {
+                name: name,
+                grade: grade,
+                email: email,
+                password: password,
+                role: 'user',
+                createdAt: new Date().toISOString()
+            };
+
+            const result = await postData('Users', 'addUser', userData);
+            
+            if (result && result.success) {
+                alert('新規登録が完了しました！ログインしてください。');
+                signupForm.reset();
+                showPage('login');
+            } else {
+                alert('登録に失敗しました: ' + (result ? result.message || result.error : '不明なエラー'));
+            }
+        });
+    }
+
+    // --- ログインページ ---
+    const loginForm = document.querySelector('#login form');
+    if(loginForm) {
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+
+            if (!email || !password) {
+                alert('メールアドレスとパスワードを入力してください。');
+                return;
+            }
+
+            const loginData = {
+                email: email,
+                password: password
+            };
+
+            const result = await postData('Users', 'login', loginData);
+
+            if (result && result.success) {
+                alert('ログイン成功！');
+                localStorage.setItem('loggedInUser', JSON.stringify(result.user));
+                loginForm.reset();
+                updateNavigationAndWelcomeMessage();
+                showPage('my-page');
+            } else {
+                alert('ログインに失敗しました: ' + (result ? result.message || result.error : '不明なエラー'));
+            }
+        });
+    }
+
     // --- 活動一覧ページ ---
-    // フィルタリング機能の実装（GASからデータを再取得して表示を更新する）
     const filterButton = document.querySelector('#activity-list .btn-secondary');
     if(filterButton) {
         filterButton.addEventListener('click', async () => {
@@ -465,7 +537,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const category = document.querySelector('.filter-category').value;
             const date = document.querySelector('.filter-date').value;
             
-            // フィルタリングパラメータをGASに渡して活動を取得
             const filteredActivities = await fetchData('Activities', 'getAll', {
                 keyword: keyword,
                 category: category,
@@ -473,14 +544,13 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             const activitiesContainer = document.querySelector('#activity-list .card-container');
-            activitiesContainer.innerHTML = ''; // クリア
+            activitiesContainer.innerHTML = '';
 
             if (filteredActivities && Array.isArray(filteredActivities) && filteredActivities.length > 0) {
                  filteredActivities.forEach(activity => {
                     const card = createActivityCard(activity);
                     activitiesContainer.appendChild(card);
                 });
-                // 詳細リンクのイベントリスナーを再設定
                 activitiesContainer.querySelectorAll('a[data-page="activity-detail"]').forEach(link => {
                     link.addEventListener('click', (e) => {
                         e.preventDefault();
@@ -493,7 +563,4 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
-
-    // ログインフォームと新規登録フォームは上記のpostData連携で完了
-
 });
