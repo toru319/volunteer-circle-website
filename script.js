@@ -56,22 +56,20 @@ async function postData(sheetName, action, data = {}, id = null) {
     }
 }
 
-// script.js のどこか（DOMContentLoaded の外側が良いでしょう）
-
 // ログイン状態に応じてナビゲーションやウェルカムメッセージを更新する関数
 function updateNavigationAndWelcomeMessage() {
     const loggedInUser = JSON.parse(localStorage.getItem('loggedInUser'));
     const loginLink = document.querySelector('a[data-page="login"]');
     const myPageLink = document.querySelector('a[data-page="my-page"]');
     const welcomeMessage = document.querySelector('#my-page .welcome-message');
-    const hamburgerNavLinks = document.querySelector('.nav-links'); // ハンバーガーメニュー内のナビゲーション
+    const hamburgerNavLinks = document.querySelector('.nav-links');
 
     if (loggedInUser) {
         // ログイン状態の場合
         if (loginLink) loginLink.textContent = 'ログアウト';
-        if (loginLink) loginLink.setAttribute('data-page', 'logout'); // ログアウトアクションに変更
+        if (loginLink) loginLink.setAttribute('data-page', 'logout');
 
-        if (myPageLink) myPageLink.style.display = 'block'; // マイページを表示
+        if (myPageLink) myPageLink.style.display = 'block';
         if (welcomeMessage) welcomeMessage.textContent = `ようこそ、${loggedInUser.name}さん`;
 
         // ログアウト処理のイベントリスナーを動的に追加
@@ -85,7 +83,7 @@ function updateNavigationAndWelcomeMessage() {
         // 未ログイン状態の場合
         if (loginLink) loginLink.textContent = 'ログイン';
         if (loginLink) loginLink.setAttribute('data-page', 'login');
-        if (myPageLink) myPageLink.style.display = 'none'; // マイページを非表示
+        if (myPageLink) myPageLink.style.display = 'none';
         if (welcomeMessage) welcomeMessage.textContent = 'ようこそ、ゲストさん';
     }
 
@@ -116,10 +114,275 @@ function handleLogout(e) {
     }
 }
 
+// 活動カードを生成するヘルパー関数
+function createActivityCard(activity) {
+    const card = document.createElement('div');
+    card.classList.add('card');
+    
+    let statusSpan = '';
+    if (activity.status === '募集中') {
+        statusSpan = `<span class="status-open">募集中</span>`;
+    } else if (activity.status === '募集終了') {
+        statusSpan = `<span class="status-full">募集終了</span>`;
+    } else if (activity.status === '募集前') {
+         statusSpan = `<span class="status-before">募集前</span>`;
+    }
 
-// document.addEventListener('DOMContentLoaded', () => の中、初期ページ表示の後に呼び出す
-    showPage('home'); // 初期ページ表示
-    updateNavigationAndWelcomeMessage(); // ログイン状態をチェックし、UIを更新
+    card.innerHTML = `
+        <h3>${activity.title}</h3>
+        <p><strong>日時:</strong> ${activity.date} ${activity.time}</p>
+        <p><strong>場所:</strong> ${activity.location}</p>
+        <p><strong>募集状況:</strong> ${statusSpan}</p>
+        <p>概要: ${activity.details ? activity.details.substring(0, 50) + '...' : ''}</p>
+        <a href="#" class="card-link" data-page="activity-detail" data-activity-id="${activity.activityID}">詳細を見る</a>
+    `;
+    return card;
+}
+
+// 活動データを取得してHTMLに描画する関数
+async function loadActivities(containerId, limit = null) {
+    const activitiesContainer = document.querySelector(`#${containerId} .card-container`);
+    if (!activitiesContainer) return;
+
+    activitiesContainer.innerHTML = '読み込み中...';
+
+    const activities = await fetchData('Activities', 'getAll');
+
+    activitiesContainer.innerHTML = '';
+
+    if (activities && Array.isArray(activities)) {
+        activities.sort((a, b) => new Date(b.date + ' ' + b.time) - new Date(a.date + ' ' + a.time));
+
+        const displayActivities = limit ? activities.slice(0, limit) : activities;
+
+        if (displayActivities.length === 0) {
+            activitiesContainer.innerHTML = '<p>現在、募集中の活動はありません。</p>';
+            return;
+        }
+
+        displayActivities.forEach(activity => {
+            const card = createActivityCard(activity);
+            activitiesContainer.appendChild(card);
+        });
+
+        activitiesContainer.querySelectorAll('a[data-page="activity-detail"]').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const activityId = link.getAttribute('data-activity-id');
+                loadActivityDetail(activityId); 
+            });
+        });
+
+    } else {
+        activitiesContainer.innerHTML = '<p>活動情報の取得に失敗しました。</p>';
+    }
+}
+
+// 活動詳細ページにデータを描画する関数
+async function loadActivityDetail(activityID) {
+    const detailPage = document.getElementById('activity-detail');
+    const detailContainer = detailPage.querySelector('.container');
+    detailContainer.innerHTML = '活動詳細を読み込み中...';
+    showPage('activity-detail');
+
+    const activity = await fetchData('Activities', 'getById', { id: activityID });
+    if (!activity) {
+        detailContainer.innerHTML = '<p>活動情報が見つかりませんでした。</p>';
+        return;
+    }
+
+    const participants = await fetchData('Registrations', 'getParticipantsByActivityId', { activityID: activityID });
+
+    let participantListHtml = '<ul class="participant-list">';
+    if (participants && Array.isArray(participants) && participants.length > 0) {
+        participants.forEach(p => {
+            participantListHtml += `<li>${p.name} (${p.grade})</li>`;
+        });
+    } else {
+        participantListHtml += '<li>まだ参加者はいません。</li>';
+    }
+    participantListHtml += '</ul>';
+
+    const currentParticipantsCount = participants ? participants.length : 0;
+    const capacity = activity.capacity || '未定';
+
+    let registerButtonHtml = '';
+    const loggedInUser = JSON.parse(localStorage.getItem('loggedInUser'));
+    if (!loggedInUser) {
+        registerButtonHtml = `<button class="btn btn-primary" data-action="login-to-register">ログインして参加登録</button>`;
+    } else {
+        const userRegistrations = await fetchData('Registrations', 'getUserRegistrations', { userID: loggedInUser.userID });
+        const isRegistered = userRegistrations && userRegistrations.some(reg => reg.activityID === activityID && reg.status !== 'キャンセル済み');
+
+        if (activity.status === '募集中' && !isRegistered && (capacity === '未定' || currentParticipantsCount < capacity)) {
+            registerButtonHtml = `<button class="btn btn-primary" data-action="register" data-activity-id="${activity.activityID}">参加登録する</button>`;
+        } else if (isRegistered) {
+            registerButtonHtml = `<button class="btn btn-secondary" disabled>登録済み</button><br><small>マイページから変更・キャンセルしてください。</small>`;
+        } else if (activity.status === '募集終了' || (capacity !== '未定' && currentParticipantsCount >= capacity)) {
+            registerButtonHtml = `<button class="btn btn-secondary" disabled>募集終了</button>`;
+        } else if (activity.status === '募集前') {
+            registerButtonHtml = `<button class="btn btn-secondary" disabled>募集前</button>`;
+        }
+    }
+
+
+    detailContainer.innerHTML = `
+        <h2>${activity.title}</h2>
+        <p><strong>日時:</strong> ${activity.date} ${activity.time}</p>
+        <p><strong>場所:</strong> ${activity.location}</p>
+        <p><strong>集合場所:</strong> ${activity.meetingPlace || '別途連絡'}</p>
+        <p><strong>持ち物:</strong> ${activity.belongings || '特になし'}</p>
+        <p><strong>服装:</strong> ${activity.dressCode || '動きやすい服装'}</p>
+        <p><strong>担当者:</strong> ${activity.contactPerson}</p>
+        <p><strong>詳細説明:</strong> ${activity.details}</p>
+        <p><strong>注意点:</strong> ${activity.notes || '特になし'}</p>
+        
+        <h3>現在の参加者 (${currentParticipantsCount}/${capacity}名)</h3>
+        ${participantListHtml}
+
+        ${registerButtonHtml}
+    `;
+
+    const registerBtn = detailContainer.querySelector('button[data-action="register"]');
+    if (registerBtn) {
+        registerBtn.addEventListener('click', async () => {
+            if (!loggedInUser) {
+                alert('参加登録にはログインが必要です。');
+                showPage('login');
+                return;
+            }
+            const confirmRegister = confirm(`「${activity.title}」に参加登録しますか？`);
+            if (confirmRegister) {
+                const registrationResult = await postData('Registrations', 'addRegistration', {
+                    userID: loggedInUser.userID,
+                    activityID: activity.activityID,
+                    status: '参加確定',
+                    registeredAt: new Date().toISOString()
+                });
+                if (registrationResult && registrationResult.success) {
+                    alert('参加登録が完了しました！マイページでご確認ください。');
+                    loadActivityDetail(activityID); // ページを再読み込みして参加者リストを更新
+                    showPage('my-page');
+                } else {
+                    alert('参加登録に失敗しました: ' + (registrationResult ? registrationResult.message || registrationResult.error : '不明なエラー'));
+                }
+            }
+        });
+    }
+    const loginToRegisterBtn = detailContainer.querySelector('button[data-action="login-to-register"]');
+    if (loginToRegisterBtn) {
+        loginToRegisterBtn.addEventListener('click', () => {
+            alert('参加登録にはログインが必要です。');
+            showPage('login');
+        });
+    }
+}
+
+// マイページの登録済み活動を読み込む関数
+async function loadMyActivities() {
+    const loggedInUser = JSON.parse(localStorage.getItem('loggedInUser'));
+    const myActivitiesContainer = document.querySelector('#my-page .my-activities .card-container');
+    const pastActivitiesContainer = document.querySelector('#my-page .past-activities .card-container');
+
+    if (!loggedInUser) {
+        if (myActivitiesContainer) myActivitiesContainer.innerHTML = '<p>ログインすると、登録済みの活動を確認できます。</p>';
+        if (pastActivitiesContainer) pastActivitiesContainer.innerHTML = '';
+        return;
+    }
+
+    if (myActivitiesContainer) myActivitiesContainer.innerHTML = '登録中の活動を読み込み中...';
+    if (pastActivitiesContainer) pastActivitiesContainer.innerHTML = '過去の参加履歴を読み込み中...';
+
+    const userRegistrations = await fetchData('Registrations', 'getUserRegistrations', { userID: loggedInUser.userID });
+    
+    if (userRegistrations && Array.isArray(userRegistrations)) {
+        const allActivities = await fetchData('Activities', 'getAll');
+        if (!allActivities) {
+            if (myActivitiesContainer) myActivitiesContainer.innerHTML = '<p>活動情報の取得に失敗しました。</p>';
+            if (pastActivitiesContainer) pastActivitiesContainer.innerHTML = '';
+            return;
+        }
+
+        const now = new Date();
+        const currentActivities = [];
+        const pastActivities = [];
+
+        userRegistrations.forEach(reg => {
+            const activity = allActivities.find(act => act.activityID === reg.activityID);
+            if (activity) {
+                const activityEndTime = new Date(activity.date + ' ' + activity.time);
+                if (activityEndTime > now && reg.status !== 'キャンセル済み') {
+                    currentActivities.push({ ...activity, registrationStatus: reg.status, registrationID: reg.registrationID });
+                } else {
+                    pastActivities.push({ ...activity, registrationStatus: reg.status, registrationID: reg.registrationID });
+                }
+            }
+        });
+
+        // 現在登録中の活動の表示
+        if (myActivitiesContainer) {
+            myActivitiesContainer.innerHTML = '';
+            if (currentActivities.length === 0) {
+                myActivitiesContainer.innerHTML = '<p>現在、登録中の活動はありません。</p>';
+            } else {
+                currentActivities.forEach(activity => {
+                    const card = document.createElement('div');
+                    card.classList.add('card');
+                    card.innerHTML = `
+                        <h4>${activity.title}</h4>
+                        <p><strong>日時:</strong> ${activity.date} ${activity.time}</p>
+                        <p><strong>参加状況:</strong> <span class="status-confirmed">${activity.registrationStatus}</span></p>
+                        <div class="my-activity-actions">
+                            <button class="btn btn-secondary" data-action="edit-registration" data-registration-id="${activity.registrationID}">修正</button>
+                            <button class="btn btn-danger" data-action="cancel-registration" data-registration-id="${activity.registrationID}" data-activity-title="${activity.title}">キャンセル</button>
+                        </div>
+                    `;
+                    myActivitiesContainer.appendChild(card);
+                });
+
+                myActivitiesContainer.querySelectorAll('button[data-action="cancel-registration"]').forEach(button => {
+                    button.addEventListener('click', async (e) => {
+                        const registrationID = e.target.getAttribute('data-registration-id');
+                        const activityTitle = e.target.getAttribute('data-activity-title');
+                        if (confirm(`「${activityTitle}」への参加をキャンセルしますか？`)) {
+                            const cancelResult = await postData('Registrations', 'update', { status: 'キャンセル済み' }, registrationID);
+                            if (cancelResult && cancelResult.success) {
+                                alert('参加をキャンセルしました。');
+                                loadMyActivities();
+                            } else {
+                                alert('キャンセルに失敗しました: ' + (cancelResult ? cancelResult.message || cancelResult.error : '不明なエラー'));
+                            }
+                        }
+                    });
+                });
+            }
+        }
+
+        // 過去の参加履歴の表示
+        if (pastActivitiesContainer) {
+            pastActivitiesContainer.innerHTML = '';
+            if (pastActivities.length === 0) {
+                pastActivitiesContainer.innerHTML = '<p>過去の参加履歴はありません。</p>';
+            } else {
+                pastActivities.forEach(activity => {
+                    const card = document.createElement('div');
+                    card.classList.add('card', 'card-past');
+                    card.innerHTML = `
+                        <h4>${activity.title}</h4>
+                        <p><strong>日時:</strong> ${activity.date}</p>
+                        <p>${activity.registrationStatus === 'キャンセル済み' ? 'キャンセル済み' : '無事終了しました'}</p>
+                    `;
+                    pastActivitiesContainer.appendChild(card);
+                });
+            }
+        }
+
+    } else {
+        if (myActivitiesContainer) myActivitiesContainer.innerHTML = '<p>登録済みの活動を取得できませんでした。</p>';
+        if (pastActivitiesContainer) pastActivitiesContainer.innerHTML = '';
+    }
+}
+
 
 document.addEventListener('DOMContentLoaded', () => {
 
@@ -135,25 +398,49 @@ document.addEventListener('DOMContentLoaded', () => {
         if (targetPage) {
             targetPage.classList.add('active');
         } else {
-            // デフォルトでホームページを表示
             document.getElementById('home').classList.add('active');
         }
-        // ページ切り替え時にウィンドウのトップにスクロール
         window.scrollTo(0, 0);
-        // モバイルメニューが開いていれば閉じる
         closeMobileMenu();
     }
 
+    // ナビゲーションリンクのイベントリスナーを修正
     navLinks.forEach(link => {
         link.addEventListener('click', (e) => {
             e.preventDefault();
             const pageId = link.getAttribute('data-page');
-            showPage(pageId);
+            const activityId = link.getAttribute('data-activity-id');
+
+            if (pageId === 'activity-detail' && activityId) {
+                loadActivityDetail(activityId);
+            } else if (pageId === 'home') {
+                showPage(pageId);
+                loadActivities('home', 3);
+            } else if (pageId === 'activity-list') {
+                showPage(pageId);
+                loadActivities('activity-list');
+            } else if (pageId === 'logout') {
+                 handleLogout(e);
+            } else if (pageId === 'my-page') {
+                showPage(pageId);
+                loadMyActivities();
+            } else if (pageId === 'login' && localStorage.getItem('loggedInUser')) {
+                // 既にログイン済みでログインリンクを押された場合（ログアウトリンクとして機能）
+                handleLogout(e);
+            }
+            else {
+                showPage(pageId);
+            }
         });
     });
 
-    // 初期ページ表示
+    // 初期ページ表示とナビゲーション更新
     showPage('home');
+    updateNavigationAndWelcomeMessage();
+    loadActivities('home', 3);
+    loadActivities('activity-list');
+    loadMyActivities(); // ログインしていればマイページも初期ロード
+
 
     // --- ハンバーガーメニュー ---
     const hamburger = document.getElementById('hamburger-menu');
@@ -167,122 +454,46 @@ document.addEventListener('DOMContentLoaded', () => {
         mobileNav.classList.remove('active');
     }
 
-    // --- 各ページのDOM操作やイベントハンドリングのひな形 ---
-
-    // --- ホームページ ---
-    // 新着活動の詳細を見るリンクにイベントリスナーを追加
-    // (実際の動作は上位のnavLinksの処理でカバーされる)
+    // --- 各ページのDOM操作やイベントハンドリング ---
 
     // --- 活動一覧ページ ---
-    // TODO: フィルタリング機能の実装
+    // フィルタリング機能の実装（GASからデータを再取得して表示を更新する）
     const filterButton = document.querySelector('#activity-list .btn-secondary');
     if(filterButton) {
-        filterButton.addEventListener('click', () => {
-            console.log('Filtering activities...');
-            // ここにキーワード、カテゴリ、日付に基づいた絞り込みロジックを記述
-        });
-    }
+        filterButton.addEventListener('click', async () => {
+            const keyword = document.querySelector('.filter-keyword').value;
+            const category = document.querySelector('.filter-category').value;
+            const date = document.querySelector('.filter-date').value;
+            
+            // フィルタリングパラメータをGASに渡して活動を取得
+            const filteredActivities = await fetchData('Activities', 'getAll', {
+                keyword: keyword,
+                category: category,
+                date: date
+            });
 
+            const activitiesContainer = document.querySelector('#activity-list .card-container');
+            activitiesContainer.innerHTML = ''; // クリア
 
-    // --- 活動詳細ページ ---
-    // TODO: 参加登録ボタンのイベントリスナー
-    const registerButton = document.querySelector('#activity-detail .btn-primary');
-    if(registerButton) {
-        registerButton.addEventListener('click', () => {
-            alert('参加登録が完了しました！ (これは仮のメッセージです)');
-            // ここに参加登録のロジックを記述
-            // 例: ログイン状態を確認し、未ログインならログインページへ誘導
-            showPage('my-page');
-        });
-    }
-
-
-// TODO: ログインフォームの送信処理
-// --- ログインページ ---
-const loginForm = document.querySelector('#login form');
-if(loginForm) {
-    loginForm.addEventListener('submit', async (e) => { // asyncを追加
-        e.preventDefault();
-        
-        const email = document.getElementById('login-email').value;
-        const password = document.getElementById('login-password').value;
-
-        if (!email || !password) {
-            alert('メールアドレスとパスワードを入力してください。');
-            return;
-        }
-
-        const loginData = {
-            email: email,
-            password: password
-        };
-
-        const result = await postData('Users', 'login', loginData); // 'login' アクションを定義
-
-        if (result && result.success) {
-            alert('ログイン成功！');
-            // ログイン成功後、ユーザー情報をlocalStorageに保存してセッションを管理
-            localStorage.setItem('loggedInUser', JSON.stringify(result.user));
-            loginForm.reset(); // フォームをクリア
-            updateNavigationAndWelcomeMessage(); // ナビゲーションやウェルカムメッセージを更新する関数を呼び出す
-            showPage('my-page'); // 成功したらマイページへ
-        } else {
-            alert('ログインに失敗しました: ' + (result ? result.message || result.error : '不明なエラー'));
-        }
-    });
-}
-
-
-// --- 新規登録ページ ---
-const signupForm = document.querySelector('#signup form');
-if(signupForm) {
-    signupForm.addEventListener('submit', async (e) => { // asyncを追加
-        e.preventDefault();
-
-        const name = document.getElementById('signup-name').value;
-        const grade = document.getElementById('signup-grade').value;
-        const email = document.getElementById('signup-email').value;
-        const password = document.getElementById('signup-password').value;
-
-        if (!name || !grade || !email || !password) {
-            alert('すべての項目を入力してください。');
-            return;
-        }
-
-        const userData = {
-            name: name,
-            grade: grade,
-            email: email,
-            password: password, // GAS側でハッシュ化される
-            role: 'user', // デフォルトは一般ユーザー
-            createdAt: new Date().toISOString()
-        };
-
-        const result = await postData('Users', 'addUser', userData); // 'addUser' アクションを新しく定義
-
-        if (result && result.success) {
-            alert('新規登録が完了しました！ログインしてください。');
-            signupForm.reset(); // フォームをクリア
-            showPage('login'); // 成功したらログインページへ
-        } else {
-            alert('登録に失敗しました: ' + (result ? result.message || result.error : '不明なエラー'));
-        }
-    });
-}
-
-
-    // --- マイページ ---
-    // TODO: 登録済み活動のキャンセル・修正ボタンのイベントリスナー
-    const cancelButtons = document.querySelectorAll('#my-page .btn-danger');
-    cancelButtons.forEach(button => {
-        button.addEventListener('click', () => {
-            if(confirm('この活動への参加をキャンセルしますか？')) {
-                console.log('Activity cancelled');
-                // ここにキャンセル処理を記述
-                // 例: 対象のカードを非表示にする
-                button.closest('.card').remove();
+            if (filteredActivities && Array.isArray(filteredActivities) && filteredActivities.length > 0) {
+                 filteredActivities.forEach(activity => {
+                    const card = createActivityCard(activity);
+                    activitiesContainer.appendChild(card);
+                });
+                // 詳細リンクのイベントリスナーを再設定
+                activitiesContainer.querySelectorAll('a[data-page="activity-detail"]').forEach(link => {
+                    link.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        const activityId = link.getAttribute('data-activity-id');
+                        loadActivityDetail(activityId); 
+                    });
+                });
+            } else {
+                activitiesContainer.innerHTML = '<p>該当する活動は見つかりませんでした。</p>';
             }
         });
-    });
+    }
+
+    // ログインフォームと新規登録フォームは上記のpostData連携で完了
 
 });
